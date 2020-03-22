@@ -65,6 +65,8 @@
         goto number;
     ```
 
+    > 破案了，JOS的make grade没有要求八进制加0，否则影响判断。
+
   - 解释printf.c和console.c间的接口关系，特别是指出console.c导出的函数以及该函数是怎样被printf.c使用的：console里打印调用了printf.c的函数cprintf，而cprintf的具体实现是借助printfmt.c中的vcprintf方法实现的。vcprintf实现了对pattern字符串的解析，使用回调函数putch打印输出，putch的实现借助cputchar实现，cputchar则是调用了console.c中的cons_putc方法，cons_putc是以console.c中的其他方法实现的。看着关系挺复杂的，实际在阅读时通过几步查找就可以理清关系。
   - 解释console.c中的下列代码：
 
@@ -80,3 +82,65 @@
     ```
 
     该部分代码对输出内容占满显示器而需要继续输出的情况`crt_pos >= CRT_SIZE`做了处理。具体方法为将已输出的内容向上移动一行，再向空出来的最下面一行输出。
+  - 其余问题为基础的函数调用跟踪、数据打印类型、格式化字符串、函数调用栈问题，不进行实验。
+- 练习9
+  - 确定内核栈初始化时机、内核栈位置、内核如何保留栈空间、栈指针指向栈空间的哪个位置。
+
+  ```asm
+  relocated:
+    # Clear the frame pointer register (EBP)
+    # so that once we get into debugging C code,
+    # stack backtraces will be terminated properly.
+    movl  $0x0,%ebp
+    # nuke frame pointer  
+    # Set the stack pointer
+    movl  $(bootstacktop),%esp
+    # now to C code
+    call  i386_init
+  ==================================================
+  .data
+    .p2align  PGSHIFT    # force page alignment
+    .globl    bootstack
+  bootstack:
+    .space    KSTKSIZE
+    .globl    bootstacktop
+  bootstacktop:
+  ```
+
+  - 由上述代码（entry.S），可以看出esp初始化指向bootstacktop，即bootstack末尾处（栈空间由高到低生长）。栈空间的预留通过开辟空白区域（大小为8*4KB）来实现。内核入口的跳转（call i386_init）在栈段的上方，即内核栈位于更高的地址
+
+- 其他练习
+  - 主要是栈回溯以及JOS下相关的调试方法的使用，下面仅贴出主要改动（补充函数）部分。
+
+  ```c
+  //计算所在源文件行数，这里只是大概了解了一下stab这个结构，没有太深入去看
+  //这块的代码是按照https://github.com/clann24/jos/blob/master/lab1/code/kern/kdebug.c抄写的
+  stab_binsearch(stabs, &lline, &rline, N_SLINE, addr);
+  info->eip_line = stabs[lline].n_desc;
+  //===========================================================================
+  //栈回溯函数，主要是通过read_ebp得到ebp，再利用函数调用栈结构访问栈中内容。
+  //这里有一个容易踩进去的坑，就是输出ebp的时候，不要把它和ebp[0]搞混看作等价。ebp[0]和*ebp才是等价的
+  int mon_backtrace(int argc, char **argv, struct Trapframe *tf){
+  // Your code here.
+  uint32_t *ebp = (uint32_t *)read_ebp();
+    int i;
+    cprintf("Stack backtrace:\n");
+    while(ebp){
+      struct Eipdebuginfo info;
+      debuginfo_eip(ebp[1],&info);
+      cprintf("  ebp  %08x  eip  %08x  args  %08x  %08x  %08x  %08x  %08x\n",ebp,ebp[1],ebp[2], ebp[3], ebp[4], ebp[5], ebp[6]);
+      cprintf("      %s:%d: %.*s+%d\n",
+        info.eip_file,
+        info.eip_line,
+        info.eip_fn_namelen,info.eip_fn_name,
+        ebp[1] - info.eip_fn_addr
+      );
+      ebp = (uint32_t *)ebp[0];
+    }
+    return 0;
+  }
+  ```
+
+## challenge
+
+- challenge任务为实现彩色文本输出，提示可以通过ANSI/VGA来实现。*待补充*
