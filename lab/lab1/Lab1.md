@@ -144,3 +144,24 @@
 ## challenge
 
 - challenge任务为实现彩色文本输出，提示可以通过ANSI/VGA来实现。*待补充*
+
+## 零碎知识
+
+### 变长参数
+
+- C语言的变长参数处理是由编译器实现的，lab1相关的printfmt等函数使用了GCC的__builtin_函数`#define va_start(ap, last) __builtin_va_start(ap, last)`来实现变长参数的输入。GCC提供了一系列__builtin_函数用来简化程序编写。
+- printfmt相关的代码如下，根据代码可以大概理解va_list的用法。
+
+```c
+void printfmt(void (*putch)(int, void*), void *putdat, const char *fmt, ...){
+  va_list ap;
+  va_start(ap, fmt);
+    vprintfmt(putch, putdat, fmt, ap);
+  va_end(ap);
+}
+```
+
+### STAB
+
+- STAB=Symbol TABle
+- 一篇介绍STAB的文章被保存在tools里
