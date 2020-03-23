@@ -129,9 +129,7 @@ static unsigned addr_6845;
 static uint16_t *crt_buf;
 static uint16_t crt_pos;
 
-static void
-cga_init(void)
-{
+static void cga_init(void){
 	volatile uint16_t *cp;
 	uint16_t was;
 	unsigned pos;
@@ -159,9 +157,7 @@ cga_init(void)
 
 
 
-static void
-cga_putc(int c)
-{
+static void cga_putc(int c){
 	// if no attribute given, then use black on white
 	if (!(c & ~0xFF))
 		c |= 0x0700;
@@ -312,9 +308,7 @@ static uint8_t *charcode[4] = {
  * Get data from the keyboard.  If we finish a character, return it.  Else 0.
  * Return -1 if no data.
  */
-static int
-kbd_proc_data(void)
-{
+static int kbd_proc_data(void){
 	int c;
 	uint8_t stat, data;
 	static uint32_t shift;
@@ -364,15 +358,11 @@ kbd_proc_data(void)
 	return c;
 }
 
-void
-kbd_intr(void)
-{
+void kbd_intr(void){
 	cons_intr(kbd_proc_data);
 }
 
-static void
-kbd_init(void)
-{
+static void kbd_init(void){
 }
 
 
@@ -407,8 +397,7 @@ cons_intr(int (*proc)(void))
 }
 
 // return the next input character from the console, or 0 if none waiting
-int
-cons_getc(void)
+int cons_getc(void)
 {
 	int c;
 
@@ -429,18 +418,14 @@ cons_getc(void)
 }
 
 // output a character to the console
-static void
-cons_putc(int c)
-{
+static void cons_putc(int c){
 	serial_putc(c);
 	lpt_putc(c);
 	cga_putc(c);
 }
 
 // initialize the console devices
-void
-cons_init(void)
-{
+void cons_init(void){
 	cga_init();
 	kbd_init();
 	serial_init();
@@ -452,15 +437,11 @@ cons_init(void)
 
 // `High'-level console I/O.  Used by readline and cprintf.
 
-void
-cputchar(int c)
-{
+void cputchar(int c){
 	cons_putc(c);
 }
 
-int
-getchar(void)
-{
+int getchar(void){
 	int c;
 
 	while ((c = cons_getc()) == 0)
@@ -468,9 +449,7 @@ getchar(void)
 	return c;
 }
 
-int
-iscons(int fdnum)
-{
+int iscons(int fdnum){
 	// used by readline
 	return 1;
 }
