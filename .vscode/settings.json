@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.asm": "gas",
+        "*.md": "markdown",
+        "*.S": "gas",
+        "x86.h": "c"
+    }
+}
