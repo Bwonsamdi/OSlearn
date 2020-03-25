@@ -107,7 +107,7 @@
   bootstacktop:
   ```
 
-  - 由上述代码（entry.S），可以看出esp初始化指向bootstacktop，即bootstack末尾处（栈空间由高到低生长）。栈空间的预留通过开辟空白区域（大小为8*4KB）来实现。内核入口的跳转（call i386_init）在栈段的上方，即内核栈位于更高的地址
+  - 由上述代码（entry.S），可以看出esp初始化指向bootstacktop，即bootstack末尾处（栈空间由高到低生长）。栈空间的预留通过开辟空白区域（大小为8*4KB）来实现。内核入口的跳转（call i386_init）在栈段的上方，即内核栈位于更高的地址。（从memlayout.h中可以看到，KSTACKTOP和KERNBASE指向同一个位置，0xf0000000）
 
 - 其他练习
   - 主要是栈回溯以及JOS下相关的调试方法的使用，下面仅贴出主要改动（补充函数）部分。

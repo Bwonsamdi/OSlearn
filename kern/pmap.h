@@ -76,9 +76,7 @@ pa2page(physaddr_t pa)
 	return &pages[PGNUM(pa)];
 }
 
-static inline void*
-page2kva(struct PageInfo *pp)
-{
+static inline void* page2kva(struct PageInfo *pp){
 	return KADDR(page2pa(pp));
 }
 
