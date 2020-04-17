@@ -415,7 +415,7 @@ static void boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t 
 // Map the physical page 'pp' at virtual address 'va'.
 // The permissions (the low 12 bits) of the page table entry
 // should be set to 'perm|PTE_P'.
-//
+// 将pp映射到va
 // Requirements
 //   - If there is already a page mapped at 'va', it should be page_remove()d.
 //   - If necessary, on demand, a page table should be allocated and inserted
@@ -464,11 +464,11 @@ int page_insert(pde_t *pgdir, struct PageInfo *pp, void *va, int perm){
 // Return NULL if there is no page mapped at va.
 //
 // Hint: the TA solution uses pgdir_walk and pa2page.
-//
+// 根据虚拟地址反查内存页，将物理页表项地址存入pte_store
 struct PageInfo * page_lookup(pde_t *pgdir, void *va, pte_t **pte_store){
 	// Fill this function in
 	pte_t *pp = pgdir_walk(pgdir, va, 0); // 试图获取va对应的页表项，没有找到时不创建新页
-	if(!pp || !(*pp & PTE_P))return NULL; // 有对应页表且存在
+	if(!pp || !(*pp & PTE_P))return NULL; // 页不存在或页存在位为0
 	if(pte_store){
 		*pte_store = pp; //存储pp
 	}
