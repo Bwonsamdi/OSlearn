@@ -98,17 +98,22 @@ static void *boot_alloc(uint32_t n) {
 	//
 	// // LAB 2: Your code here.
 	//1: 预分配，判断分配后内存是否超出4MB
-	if(n==0){
-		result = nextfree;
-		return result;
-	}
-	char* __nextfree = ROUNDUP((char *)(nextfree + n), PGSIZE);
-	if(n<0 || PADDR(__nextfree)>0x400000){
-		panic("Out of memory or invalid allocated mem size");
-	}
-	//2: 分配并更新nextfree
+	// if(n==0){
+	// 	result = nextfree;
+	// 	return result;
+	// }
+	// char* __nextfree = ROUNDUP((char *)(nextfree + n), PGSIZE);
+	// if(n<0 || PADDR(__nextfree)>0x400000){
+	// 	panic("Out of memory or invalid allocated mem size");
+	// }
+	// //2: 分配并更新nextfree
+	// result = nextfree;
+	// nextfree = __nextfree;
+	// return result;
 	result = nextfree;
-	nextfree = __nextfree;
+	nextfree = ROUNDUP(nextfree+n, PGSIZE);
+		if ((uint32_t) nextfree - KERNBASE > (npages*PGSIZE))
+		panic("Out of memory!\n");
 	return result;
 }
 
@@ -134,7 +139,7 @@ void mem_init(void){
 	//////////////////////////////////////////////////////////////////////
 	// create initial page directory.
 	kern_pgdir = (pde_t *) boot_alloc(PGSIZE);
-	memset(kern_pgdir, 0, PGSIZE);
+	// memset(kern_pgdir, 0, PGSIZE);
 
 	//////////////////////////////////////////////////////////////////////
 	// Recursively insert PD in itself as a page table, to form
@@ -158,7 +163,8 @@ void mem_init(void){
 	//////////////////////////////////////////////////////////////////////
 	// Make 'envs' point to an array of size 'NENV' of 'struct Env'.
 	// LAB 3: Your code here.
-
+	envs = (struct Env*)boot_alloc(NENV*sizeof(struct Env));
+	memset(envs, 0, NENV*sizeof(struct Env));
 	//////////////////////////////////////////////////////////////////////
 	// Now that we've allocated the initial kernel data structures, we set
 	// up the list of free physical pages. Once we've done so, all further
@@ -196,7 +202,13 @@ void mem_init(void){
 	//    - the new image at UENVS  -- kernel R, user R
 	//    - envs itself -- kernel RW, user NONE
 	// LAB 3: Your code here.
-
+	boot_map_region(
+		kern_pgdir,
+		UENVS,
+		PTSIZE,
+		PADDR(envs),
+		PTE_U | PTE_P
+	);
 	//////////////////////////////////////////////////////////////////////
 	// Use the physical memory that 'bootstack' refers to as the kernel
 	// stack.  The kernel stack grows down from virtual address KSTACKTOP.
@@ -763,6 +775,7 @@ check_kern_pgdir(void)
 				assert(pgdir[i] & PTE_P);
 				assert(pgdir[i] & PTE_W);
 			} else
+				// cprintf("pgdir[%d] == 0", i);
 				assert(pgdir[i] == 0);
 			break;
 		}
